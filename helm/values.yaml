@@ -3,6 +3,11 @@
 
 replicaCount: 1
 
+# templates/deployment.yaml passes this straight through as the container's TZ env var.
+# Matches the default already baked into helm/Dockerfile (ENV TZ=America/Los_Angeles);
+# override to your own timezone.
+tz: America/Los_Angeles
+
 image:
   repository: sickcodes/docker-osx-vnc
   tag: latest

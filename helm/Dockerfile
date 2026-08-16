@@ -6,14 +6,16 @@
 #  by itself.. very well anyway.
 #
 
-FROM ubuntu:21.04
+FROM ubuntu:22.04
 
 SHELL ["/bin/bash", "-c"]
 
 # this has to match .Values.image.userName in helm template
 ARG USER=ubuntu
 # this installs the kvm linux kernel in the docker container so that OpenCore.qcow2 boot images
-#  can be built.
+#  can be built. linux-image-kvm is an amd64-only kernel flavor (consistent with the rest of
+#  this project, which targets x86 macOS guests) -- build with `--platform linux/amd64` if your
+#  Docker host defaults to a different architecture (e.g. Apple Silicon), or this apt install fails.
 ARG DOCKER_KERNEL_VERSION=linux-image-kvm
 
 ENV TZ=America/Los_Angeles
