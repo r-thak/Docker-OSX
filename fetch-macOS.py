@@ -62,6 +62,12 @@ if sys.version_info[0] == 3 and sys.version_info[1] >= 9:
         return rootObject
     # adding the method readPlist() to plistlib
     plistlib.readPlist = MethodType(readPlist, plistlib)
+    # readPlistFromString was removed the same as readPlist, but unlike
+    # readPlist it was never shimmed back in here, so the gzipped-catalog
+    # path in download_and_parse_sucatalog() raised AttributeError on
+    # Python 3.9+. plistlib.loads() is the direct replacement and takes
+    # the same single bytes argument, so no MethodType wrapping is needed.
+    plistlib.readPlistFromString = plistlib.loads
 
 # https://github.com/foxlet/macOS-Simple-KVM/blob/master/tools/FetchMacOS/fetch-macos.py (unused)
 # https://github.com/munki/macadmin-scripts
@@ -336,21 +342,36 @@ def find_installer_app(mountpoint):
     return None
 
 
+def _version_key(version_string):
+    '''Parses a dotted version string like "10.15.4" into a tuple of ints
+    for comparison, so "10.10" correctly sorts above "10.9" (which plain
+    string comparison gets backwards) without depending on distutils,
+    which was removed in Python 3.12.'''
+    parts = []
+    for part in version_string.split('.'):
+        try:
+            parts.append(int(part))
+        except ValueError:
+            parts.append(0)
+    return tuple(parts)
+
+
 def determine_version(version, product_info):
     if version:
         if version == 'latest':
-            from distutils.version import StrictVersion
-            latest_version = StrictVersion('0.0.0')
+            latest_version = None
             for index, product_id in enumerate(product_info):
                 d = product_info[product_id]['version']
-                if d > latest_version:
+                if not d:
+                    continue
+                if latest_version is None or _version_key(d) > _version_key(latest_version):
                     latest_version = d
 
-            if latest_version == StrictVersion("0.0.0"):
-                print("Could not find latest version {}")
+            if latest_version is None:
+                print("Could not find latest version")
                 exit(1)
 
-            version = str(latest_version)
+            version = latest_version
 
         for index, product_id in enumerate(product_info):
             v = product_info[product_id]['version']
