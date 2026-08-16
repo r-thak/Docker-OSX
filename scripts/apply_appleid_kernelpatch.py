@@ -2,12 +2,13 @@
 import plistlib
 import base64
 import os
+import shutil
 import sys
 
 def add_kernel_patches(config_path):
     # Make a backup of the original file
     backup_path = config_path + '.backup'
-    os.system(f'cp "{config_path}" "{backup_path}"')
+    shutil.copy2(config_path, backup_path)
     print(f"Backup created at {backup_path}")
     
     # Read the plist file
