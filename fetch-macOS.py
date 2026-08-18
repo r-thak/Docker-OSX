@@ -39,6 +39,7 @@ import os
 import gzip
 import argparse
 import plistlib
+import shutil
 import subprocess
 
 from xml.dom import minidom
@@ -93,8 +94,7 @@ class ReplicationError(Exception):
 
 
 def cmd_exists(cmd):
-    return subprocess.Popen("type " + cmd, shell=True,
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return shutil.which(cmd) is not None
 
 
 def replicate_url(full_url,
